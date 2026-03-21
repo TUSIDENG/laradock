@@ -316,7 +316,7 @@ services:
           - no_proxy
       volumes:
         - ./php-fpm/php${PHP_VERSION}.ini:/usr/local/etc/php/php.ini
-        - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
+        - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}:delegated
         - docker-in-docker:/certs/client
       expose:
         - "9000"
@@ -476,6 +476,7 @@ services:
         - "${NGINX_HOST_HTTP_PORT}:80"
         - "${NGINX_HOST_HTTPS_PORT}:443"
         - "${VARNISH_BACKEND_PORT}:81"
+        - "${NGINX_HOST_CUSTOM_PORT}:${NGINX_HOST_CUSTOM_PORT}"
       depends_on:
         - php-fpm
       networks:
