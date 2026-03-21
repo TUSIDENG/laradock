@@ -26,20 +26,81 @@ ENV DEBIAN_FRONTEND noninteractive
 # If you're in China, or you need to change sources, will be set CHANGE_SOURCE to true in .env.
 
 ARG CHANGE_SOURCE=false
+# RUN if [ ${CHANGE_SOURCE} = true ]; then \
+#     # Change application source from deb.debian.org to aliyun source
+#     sed -i 's/deb.debian.org/mirrors.tuna.tsinghua.edu.cn/' /etc/apt/sources.list && \
+#     sed -i 's/security.debian.org/mirrors.tuna.tsinghua.edu.cn/' /etc/apt/sources.list && \
+#     sed -i 's/security-cdn.debian.org/mirrors.tuna.tsinghua.edu.cn/' /etc/apt/sources.list \
+# ;fi
+
+# RUN if [ "$LARADOCK_PHP_VERSION" = "7.1" ] || [ ${LARADOCK_PHP_VERSION} = "7.2" ]; then \
+#     sed -i \
+#       -e 's|deb.debian.org|archive.debian.org|g' \
+#       -e 's|security.debian.org|archive.debian.org|g' \
+#       -e '/buster-updates/d' \
+#       /etc/apt/sources.list; \
+# fi
+
+
+# 适配 Debian slim 新源格式，替换为清华源
+# ===================== 适配 Debian slim 新格式的源替换脚本 =====================
+# 1. 核心：替换为清华源（受控于 CHANGE_SOURCE 开关）
 RUN if [ ${CHANGE_SOURCE} = true ]; then \
-    # Change application source from deb.debian.org to aliyun source
-    sed -i 's/deb.debian.org/mirrors.tuna.tsinghua.edu.cn/' /etc/apt/sources.list && \
-    sed -i 's/security.debian.org/mirrors.tuna.tsinghua.edu.cn/' /etc/apt/sources.list && \
-    sed -i 's/security-cdn.debian.org/mirrors.tuna.tsinghua.edu.cn/' /etc/apt/sources.list \
+    # 删除原有 slim 格式的源配置文件
+    rm -rf /etc/apt/sources.list.d/debian.sources && \
+    # 检测 Debian 版本代号（自动适配 buster/bullseye/bookworm）
+    DEBIAN_CODENAME=$(grep -oP 'VERSION_CODENAME=\K\w+' /etc/os-release) && \
+    # 写入清华源（适配新格式 debian.sources）
+    echo "Types: deb" > /etc/apt/sources.list.d/debian.sources && \
+    echo "URIs: https://mirrors.tuna.tsinghua.edu.cn/debian" >> /etc/apt/sources.list.d/debian.sources && \
+    echo "Suites: ${DEBIAN_CODENAME} ${DEBIAN_CODENAME}-updates ${DEBIAN_CODENAME}-backports" >> /etc/apt/sources.list.d/debian.sources && \
+    echo "Components: main contrib non-free non-free-firmware" >> /etc/apt/sources.list.d/debian.sources && \
+    # 写入安全更新源
+    echo "" >> /etc/apt/sources.list.d/debian.sources && \
+    echo "Types: deb" >> /etc/apt/sources.list.d/debian.sources && \
+    echo "URIs: https://mirrors.tuna.tsinghua.edu.cn/debian-security" >> /etc/apt/sources.list.d/debian.sources && \
+    echo "Suites: ${DEBIAN_CODENAME}-security" >> /etc/apt/sources.list.d/debian.sources && \
+    echo "Components: main contrib non-free non-free-firmware" >> /etc/apt/sources.list.d/debian.sources \
 ;fi
 
+# ===================== 适配 Debian slim 新格式的源替换脚本 =====================
+# 1. 核心：替换为清华源（受控于 CHANGE_SOURCE 开关）
+RUN if [ ${CHANGE_SOURCE} = true ]; then \
+    # 删除原有 slim 格式的源配置文件
+    rm -rf /etc/apt/sources.list.d/debian.sources && \
+    # 检测 Debian 版本代号（自动适配 buster/bullseye/bookworm）
+    DEBIAN_CODENAME=$(grep -oP 'VERSION_CODENAME=\K\w+' /etc/os-release) && \
+    # 写入清华源（适配新格式 debian.sources）
+    echo "Types: deb" > /etc/apt/sources.list.d/debian.sources && \
+    echo "URIs: https://mirrors.tuna.tsinghua.edu.cn/debian" >> /etc/apt/sources.list.d/debian.sources && \
+    echo "Suites: ${DEBIAN_CODENAME} ${DEBIAN_CODENAME}-updates ${DEBIAN_CODENAME}-backports" >> /etc/apt/sources.list.d/debian.sources && \
+    echo "Components: main contrib non-free non-free-firmware" >> /etc/apt/sources.list.d/debian.sources && \
+    # 写入安全更新源
+    echo "" >> /etc/apt/sources.list.d/debian.sources && \
+    echo "Types: deb" >> /etc/apt/sources.list.d/debian.sources && \
+    echo "URIs: https://mirrors.tuna.tsinghua.edu.cn/debian-security" >> /etc/apt/sources.list.d/debian.sources && \
+    echo "Suites: ${DEBIAN_CODENAME}-security" >> /etc/apt/sources.list.d/debian.sources && \
+    echo "Components: main contrib non-free non-free-firmware" >> /etc/apt/sources.list.d/debian.sources \
+;fi
+
+# 2. 适配 PHP 7.1/7.2（旧版本需指向 archive.debian.org 归档源）
 RUN if [ "$LARADOCK_PHP_VERSION" = "7.1" ] || [ ${LARADOCK_PHP_VERSION} = "7.2" ]; then \
-    sed -i \
-      -e 's|deb.debian.org|archive.debian.org|g' \
-      -e 's|security.debian.org|archive.debian.org|g' \
-      -e '/buster-updates/d' \
-      /etc/apt/sources.list; \
-fi
+    # 删除原有源配置
+    rm -rf /etc/apt/sources.list.d/debian.sources && \
+    # 强制指定 buster 归档源（PHP7.1/7.2 仅兼容 Debian 10）
+    echo "Types: deb" > /etc/apt/sources.list.d/debian.sources && \
+    echo "URIs: https://archive.debian.org/debian" >> /etc/apt/sources.list.d/debian.sources && \
+    echo "Suites: buster buster-updates" >> /etc/apt/sources.list.d/debian.sources && \
+    echo "Components: main contrib non-free non-free-firmware" >> /etc/apt/sources.list.d/debian.sources && \
+    echo "" >> /etc/apt/sources.list.d/debian.sources && \
+    echo "Types: deb" >> /etc/apt/sources.list.d/debian.sources && \
+    echo "URIs: https://archive.debian.org/debian-security" >> /etc/apt/sources.list.d/debian.sources && \
+    echo "Suites: buster-security" >> /etc/apt/sources.list.d/debian.sources && \
+    echo "Components: main contrib non-free non-free-firmware" >> /etc/apt/sources.list.d/debian.sources && \
+    # 禁用过期检查（归档源必须加）
+    echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99no-check-valid-until \
+;fi
+
 
 # always run apt update when start and after add new source list, then clean up at end.
 RUN set -xe; \
