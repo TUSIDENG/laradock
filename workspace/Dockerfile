@@ -890,13 +890,12 @@ ENV YARN_VERSION ${YARN_VERSION}
 
 RUN if [ ${INSTALL_YARN} = true ]; then \
     [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" && \
+    corepack enable && \
     if [ ${YARN_VERSION} = "latest" ]; then \
-        curl -o- -L https://yarnpkg.com/install.sh | bash; \
+        corepack prepare yarn@stable --activate; \
     else \
-        curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version ${YARN_VERSION}; \
-    fi && \
-    echo "" >> ~/.bashrc && \
-    echo 'export PATH="$HOME/.yarn/bin:$PATH"' >> ~/.bashrc \
+        corepack prepare yarn@${YARN_VERSION} --activate; \
+    fi \
 ;fi
 
 # Add YARN binaries to root's .bashrc
