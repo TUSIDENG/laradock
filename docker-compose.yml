@@ -222,8 +222,8 @@ services:
       build:
         context: ./workspace_fronted
         args:
-          - PUID=${WORKSPACE_PUID}
-          - PGID=${WORKSPACE_PGID}
+          - PUID=${WORKSPACE_FRONTED_PUID:-1001}
+          - PGID=${WORKSPACE_FRONTED_PGID:-1001}
           - NVM_NODEJS_ORG_MIRROR=${WORKSPACE_NVM_NODEJS_ORG_MIRROR}
           - INSTALL_NODE=${WORKSPACE_INSTALL_NODE}
           - NODE_VERSION=${WORKSPACE_NODE_VERSION}
